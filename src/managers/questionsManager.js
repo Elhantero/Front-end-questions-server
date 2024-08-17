@@ -1,26 +1,6 @@
 import connection from "../mysql/index.js";
 import allowedCORSURL from "../constants/allowedCORSURL.js";
-
-export const createQuestionWithParams = (req, res) => {
-    new Promise((resolve, reject) => {
-        connection.query({
-                sql: `INSERT INTO FrontEndDB.questions (text, categoryId)
-                          VALUES ((?), (?))`,
-                timeout: 3000,
-            },
-            [req.body.text, req.body.categoryId],
-            function (error, results) {
-                if (error) reject(error);
-                resolve({
-                    status: 'ok',
-                    categoryId: req.body.categoryId,
-                });
-                return results;
-            }
-        );
-    }).then(results => res.send(results))
-        .catch(err =>  res.send(err, 'db createQuestionWithParams error'));
-}
+import dbQuery from "../mysql/index.js";
 
 export const getQuestionByCategoryId =  (req, res) => {
     res.set({
@@ -28,43 +8,65 @@ export const getQuestionByCategoryId =  (req, res) => {
         "Access-Control-Allow-Origin": allowedCORSURL,
     })
     const { categoryId } = req.params;
-    new Promise((resolve, reject) => {
-        connection.query({
-                sql: `select q.categoryId, q.questionId, q.text from  FrontEndDB.questions as q
-                            where categoryId = (?)`,
-                timeout: 3000,
-            },
-            [categoryId],
-            function (error, results) {
-                if(error) reject(error);
-                resolve(results);
-                return results;
-            }
-        );
-    }).then(results => res.send(results))
-        .catch(err => res.send(err, 'db getQuestionByCategoryId error'));
+    const query = `select q.categoryId, q.questionId, q.text from  FrontEndDB.questions as q
+                            where categoryId = (?)`;
+    const params = [categoryId];
+    dbQuery(query, params)
+    .then(results => res.send(results))
+    .catch(err => res.send(err, 'db getQuestionByCategoryId error'));
 };
 
+export const createQuestionWithParams = (req, res) => {
+    if(!req?.body?.text || !req.body.categoryId) {
+        res.send({ error: 'wrong params'});
+        return;
+    }
+    const query = `INSERT INTO FrontEndDB.questions (text, categoryId)
+                          VALUES ((?), (?))`;
+    const params = [req.body.text, req.body.categoryId];
+    dbQuery(query, params)
+        .then(results =>{
+            res.send({
+                status: 'ok',
+                text: req.body.text,
+                questionId: results?.insertId,
+                categoryId: req.body.categoryId,
+            })
+        })
+        .catch(err => res.send(err, 'db createQuestionWithParams error'));
+    }
+
+
+
 export const updateQuestion = (req, res) => {
-    new Promise((resolve, reject) => {
-        connection.query({
-                sql: `UPDATE FrontEndDB.questions
+    if(!req?.body?.text) {
+        res.send({ error: 'wrong params'});
+        return;
+    }
+    // MYSQL Language
+    const query = `UPDATE FrontEndDB.questions
                           SET text = (?)
-                          WHERE questionId = (?);`,
-                timeout: 3000,
-            },
-            [req.body.text, req.body.questionId],
-            function (error, results) {
-                if(error) reject(error);
-                if(results.affectedRows) {
-                    resolve({
-                        status: 'ok',
-                        questionId: req.body.questionId,
-                    });
-                }
-                return results;
-            }
-        );
-    }).then(results => res.send(results))
-        .catch(err => res.send(err, 'db updateQuestion error'));
-}
+                          WHERE questionId = (?);`;
+    const params = [req.body.text, req.body.questionId];
+    dbQuery(query, params)
+        .then(() => {
+            res.send({
+                status: 'ok',
+                questionId: req.body.questionId,
+            })
+        })
+        .catch(err => res.send(err, 'db updateQuestion error'))
+};
+
+export const deleteQuestion = (req, res) => {
+    const query = `delete from  FrontEndDB.questions where questionId = (?);`;
+    const params = [req.body.questionId];
+    dbQuery(query, params)
+        .then(() => {
+            res.send({
+                status: 'ok',
+                questionId: req.body.questionId,
+            })
+        })
+        .catch(err =>  res.send(err, 'db deleteQuestion error'));
+};
