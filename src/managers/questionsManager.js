@@ -8,7 +8,7 @@ export const getQuestionByCategoryId =  (req, res) => {
         "Access-Control-Allow-Origin": allowedCORSURL,
     })
     const { categoryId } = req.params;
-    const query = `select q.categoryId, q.questionId, q.text from  FrontEndDB.questions as q
+    const query = `select * from FrontEndDB.questions as q
                             where categoryId = (?)`;
     const params = [categoryId];
     dbQuery(query, params)
@@ -39,16 +39,19 @@ export const createQuestionWithParams = (req, res) => {
 
 
 export const updateQuestion = (req, res) => {
-    if(!req?.body?.text) {
-        res.send({ error: 'wrong params'});
+    const { questionId, ...otherParams } = req.body;
+    if(!questionId) {
+        res.send({ error: 'wrong questionId'});
         return;
     }
-    // MYSQL Language
+    const params = Object.keys(otherParams);
+    const values = params.map(key => otherParams[key]);
+    values.push(questionId);
+    const paramsStr = params.map(key => `SET ${key}=(?)`).join(',');
     const query = `UPDATE FrontEndDB.questions
-                          SET text = (?)
+                          ${paramsStr}
                           WHERE questionId = (?);`;
-    const params = [req.body.text, req.body.questionId];
-    dbQuery(query, params)
+    dbQuery(query, values)
         .then(() => {
             res.send({
                 status: 'ok',

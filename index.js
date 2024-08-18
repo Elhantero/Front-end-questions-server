@@ -15,7 +15,7 @@ app.use(bodyParser.json());
 app.get('/categories',getAllCategories);
 
 app.get('/questions/:categoryId', getQuestionByCategoryId)
-app.post('/questions', createQuestionWithParams);
-app.put('/questions', updateQuestion);
+app.post('/questions/create', createQuestionWithParams);
+app.put('/questions/update', updateQuestion);
 app.delete('/questions/delete', deleteQuestion);
 app.listen(PORT, () => console.log(`Server running on port: http://localhost:${PORT}`));
