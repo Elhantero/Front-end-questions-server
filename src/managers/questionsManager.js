@@ -34,7 +34,7 @@ export const createQuestionWithParams = (req, res) => {
             })
         })
         .catch(err => res.send(err, 'db createQuestionWithParams error'));
-    }
+}
 
 
 
@@ -73,3 +73,34 @@ export const deleteQuestion = (req, res) => {
         })
         .catch(err =>  res.send(err, 'db deleteQuestion error'));
 };
+
+export const getExamQuestions = (req, res) => {
+    res.set({
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": allowedCORSURL,
+    })
+    const limit = Number(req?.query?.limit) || 10
+    const query = `SELECT * FROM  FrontEndDB.questions
+                            ORDER BY RAND()
+                            LIMIT ?`;
+    const params = [limit];
+    dbQuery(query, params)
+        .then(results => res.send(results))
+        .catch(err => res.send(err, 'db getExamQuestions error'));
+};
+
+export const getQuestionStatistic = async (req, res) => {
+    res.set({
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": allowedCORSURL,
+    })
+    const limit = Number(req?.query?.limit) || 10
+    const query = `select COUNT(*) as total, SUM(CASE WHEN readyStatus = 1 THEN 1 ELSE 0 END) AS readyCount
+                            from FrontEndDB.questions`;
+    dbQuery(query)
+        .then(results => res.send(results[0]) || {})
+        .catch(err => res.send(err, 'db getQuestionStatistic error'));
+
+    // select COUNT(*) as total from FrontEndDB.questions where questionId > 0
+    // select COUNT(*) as totalReady from FrontEndDB.questions where readyStatus = 1
+}
