@@ -9,7 +9,7 @@ export const getAllCategories = (req, res) => {
     // поки відключу 11 і 13, тайпскріпт і ву
     const query = `select c.categoryId, c.categoryName, ct.nameUK as name from  FrontEndDB.categories as c
                         join FrontEndDB.categoriesTranslate as ct on c.categoryId = ct.categoryId
-                        where c.categoryId not in (11, 13);`;
+                        where c.disabled = 0;`;
     dbQuery(query)
         .then(results => res.send(results))
         .catch(err => res.send(err, 'db getAllCategories error'));

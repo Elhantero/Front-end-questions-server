@@ -81,7 +81,7 @@ export const getExamQuestions = (req, res) => {
     })
     const limit = Number(req?.query?.limit) || 10
     const query = `SELECT * FROM  FrontEndDB.questions
-                            where categoryId not in(11, 13)
+                            where disabled = 0
                             ORDER BY RAND()
                             LIMIT ?`;
     const params = [limit];
