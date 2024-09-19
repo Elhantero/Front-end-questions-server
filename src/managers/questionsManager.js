@@ -80,8 +80,10 @@ export const getExamQuestions = (req, res) => {
         "Access-Control-Allow-Origin": allowedCORSURL,
     })
     const limit = Number(req?.query?.limit) || 10
-    const query = `SELECT * FROM  FrontEndDB.questions
-                            where disabled = 0
+    const query = `SELECT q.questionId, q.text, q.categoryId, q.readyStatus, q.rating, q.answer
+                            FROM  FrontEndDB.questions q
+                            join FrontEndDB.categories c on c.categoryId = q.categoryId
+                            where c.disabled = 0
                             ORDER BY RAND()
                             LIMIT ?`;
     const params = [limit];
